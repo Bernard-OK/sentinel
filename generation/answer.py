@@ -122,6 +122,7 @@ def answer(query: str, k: int = 5) -> dict:
 
     return {
         "answer": parsed,
+        "context": context,
         "retrieved_ids": retrieved_ids,
         "usage": {"input": usage.input_tokens, "output": usage.output_tokens},
         "cost_usd": round(cost, 6),

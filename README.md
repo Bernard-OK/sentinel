@@ -13,7 +13,8 @@ retrieval confidence is low, and every change is gated by an evaluation regressi
 > _Baseline numbers land at the end of Week 1. This table is the first thing a reader should see —
 > it's the point of the project._
 
-_Baseline = vector-only retrieval (bge-small-en-v1.5), 60-question golden set._
+_Retrieval = vector-only (bge-small-en-v1.5), 60-question golden set. Answer-level metrics from
+the full-pipeline run (Claude Sonnet 4.6 generation, Haiku 4.5 judge)._
 
 | Metric | Baseline | Current |
 |---|---|---|
@@ -21,11 +22,11 @@ _Baseline = vector-only retrieval (bge-small-en-v1.5), 60-question golden set._
 | Retrieval recall@5 | 0.82 | 0.82 |
 | Retrieval recall@10 | 0.90 | 0.90 |
 | Retrieval MRR | 0.70 | 0.70 |
-| Answer faithfulness (LLM-judge) | – | – |
-| Citation accuracy | – | – |
-| Hallucination rate | – | – |
-| Cost / query (USD) | – | – |
-| Latency p50 / p95 | – | – |
+| Answer faithfulness (LLM-judge) | 1.00 | 1.00 |
+| Citation accuracy | 1.00 | 1.00 |
+| Hallucination rate | 0.00 | 0.00 |
+| Cost / query (USD) | $0.0074 | $0.0074 |
+| Mean latency | 5.2 s | 5.2 s |
 
 Run it yourself: `python -m eval.run_eval`
 
