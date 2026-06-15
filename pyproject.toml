@@ -1,0 +1,36 @@
+[project]
+name = "sentinel"
+version = "0.1.0"
+description = "Production-grade RAG + agent for CVE/security-advisory triage, built eval-first."
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=0.40",          # Claude SDK (generation + LLM-judge)
+    "sentence-transformers>=3",  # bge-large embeddings (local, free)
+    "psycopg[binary]>=3.2",      # Postgres driver
+    "pgvector>=0.3",             # vector type for psycopg
+    "httpx>=0.27",               # NVD / KEV / EPSS API calls
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "pydantic>=2.9",             # structured outputs / schemas
+    "langfuse>=2.50",            # tracing / observability
+    "python-dotenv>=1.0",
+    "rich>=13",                  # readable CLI output during dev
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.7",
+    "ragas>=0.2",                # industry eval framework (for comparison)
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ingestion", "retrieval", "agent", "generation", "guardrails", "eval", "api"]

@@ -1,0 +1,24 @@
+name: eval-regression
+
+# Runs a fixed slice of the eval harness on every PR.
+# Fails the build if answer faithfulness drops below threshold — quality can't silently regress.
+# (Wired up once eval/run_eval.py produces numbers — Week 1, end.)
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - name: Run eval (fixed slice)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          echo "TODO: python -m eval.run_eval --ci --threshold-faithfulness 0.85"
