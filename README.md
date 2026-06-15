@@ -13,10 +13,14 @@ retrieval confidence is low, and every change is gated by an evaluation regressi
 > _Baseline numbers land at the end of Week 1. This table is the first thing a reader should see —
 > it's the point of the project._
 
+_Baseline = vector-only retrieval (bge-small-en-v1.5), 60-question golden set._
+
 | Metric | Baseline | Current |
 |---|---|---|
-| Retrieval recall@5 | – | – |
-| Retrieval MRR | – | – |
+| Retrieval recall@1 | 0.60 | 0.60 |
+| Retrieval recall@5 | 0.82 | 0.82 |
+| Retrieval recall@10 | 0.90 | 0.90 |
+| Retrieval MRR | 0.70 | 0.70 |
 | Answer faithfulness (LLM-judge) | – | – |
 | Citation accuracy | – | – |
 | Hallucination rate | – | – |
