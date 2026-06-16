@@ -93,6 +93,18 @@ python -m ingestion.fetch   # Day 1
 | `api/` | FastAPI service |
 | `ui/` | thin Next.js frontend |
 
+## Try it
+
+```bash
+python -m generation.answer "What command injection flaws affect VMware?"   # grounded, cited, guarded
+python -m agent.agent "Which actively-exploited CVEs should I patch first?"  # tool-using agent
+python -m eval.retrieval_eval --mode compare                                 # vector vs hybrid vs rerank
+python -m eval.validate_judge                                                # meta-eval the judge
+python -m ops.cost_report --sample 10                                        # cost & latency dashboard
+```
+
 ## Status
 
-🚧 Week 1 — eval-first baseline. See the build log in [`docs/`](docs/) (coming).
+Built: ingestion · hybrid retrieval + rerank · grounded cited generation · LLM-judge (validated) ·
+tool-using agent · guardrails (confidence gate + citation enforcement) · cost/latency dashboard.
+Next: Langfuse tracing, public deploy, write-up. ~$7.53 per 1,000 queries at p50 5.0s.

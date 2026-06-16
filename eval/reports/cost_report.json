@@ -1,0 +1,18 @@
+{
+  "queries": 10,
+  "refused": 0,
+  "latency_ms": {
+    "p50": 5040,
+    "p95": 7366,
+    "mean": 5325
+  },
+  "cost_usd": {
+    "mean": 0.007528,
+    "total": 0.07528
+  },
+  "tokens": {
+    "in_mean": 1241,
+    "out_mean": 254
+  },
+  "projected_usd_per_1k": 7.53
+}
