@@ -25,6 +25,7 @@ import psycopg
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
+from guardrails.guard import confidence_gate, enforce_citations
 from retrieval.hybrid import hybrid_search
 
 load_dotenv()
@@ -98,6 +99,15 @@ def build_context(query: str, k: int = 5) -> tuple[str, list[str]]:
 
 
 def answer(query: str, k: int = 5) -> dict:
+    # Guardrail 1 — confidence gate: refuse out-of-corpus questions instead of improvising.
+    passes, score = confidence_gate(query)
+    if not passes:
+        return {
+            "refused": True,
+            "reason": f"low retrieval confidence ({score:.2f} < 0.60) — likely outside the CVE corpus",
+            "retrieved_ids": [],
+        }
+
     context, retrieved_ids = build_context(query, k)
     if not context:
         return {"error": "no context retrieved"}
@@ -120,10 +130,18 @@ def answer(query: str, k: int = 5) -> dict:
     in_rate, out_rate = PRICING.get(GEN_MODEL, (0, 0))
     cost = (usage.input_tokens * in_rate + usage.output_tokens * out_rate) / 1_000_000
 
+    # Guardrail 2 — citation enforcement: drop any cite the model didn't actually retrieve.
+    invalid_cites: list[str] = []
+    if parsed:
+        valid, invalid_cites = enforce_citations(parsed.citations, retrieved_ids)
+        parsed.citations = valid
+
     return {
         "answer": parsed,
         "context": context,
         "retrieved_ids": retrieved_ids,
+        "confidence": round(score, 3),
+        "stripped_citations": invalid_cites,
         "usage": {"input": usage.input_tokens, "output": usage.output_tokens},
         "cost_usd": round(cost, 6),
         "latency_ms": latency_ms,
@@ -138,6 +156,9 @@ def main() -> None:
     args = ap.parse_args()
 
     r = answer(args.query, args.k)
+    if r.get("refused"):
+        print(f"\n\033[33m⛔ Refused to answer\033[0m — {r['reason']}")
+        return
     if "error" in r:
         print(r["error"])
         return
