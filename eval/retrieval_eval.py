@@ -24,6 +24,15 @@ KS = (1, 3, 5, 10)
 MAXK = max(KS)
 
 
+def retrieve(query: str, k: int, mode: str) -> list[str]:
+    """Return ranked CVE ids for the chosen retrieval mode."""
+    if mode == "vector":
+        return [h["cve_id"] for h in search(query, k)]
+    from retrieval.hybrid import hybrid_search
+
+    return [h["cve_id"] for h in hybrid_search(query, k, rerank=(mode == "rerank"))]
+
+
 def load_golden(path: str) -> list[dict]:
     rows = []
     with open(path) as f:
@@ -38,14 +47,14 @@ def load_golden(path: str) -> list[dict]:
     return rows
 
 
-def evaluate(golden: list[dict]) -> dict:
+def evaluate(golden: list[dict], mode: str = "vector") -> dict:
     recall_hits = {k: 0 for k in KS}
     reciprocal_ranks = []
     misses = []
 
     for row in golden:
         expected = set(row["expected_cve_ids"])
-        ranked = [hit["cve_id"] for hit in search(row["question"], MAXK)]
+        ranked = retrieve(row["question"], MAXK, mode)
 
         # first rank at which we hit an expected id
         first_rank = next((i + 1 for i, cid in enumerate(ranked) if cid in expected), None)
@@ -68,12 +77,24 @@ def evaluate(golden: list[dict]) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--golden", default="eval/golden_set.jsonl")
+    ap.add_argument("--mode", choices=["vector", "hybrid", "rerank", "compare"], default="vector")
     args = ap.parse_args()
 
     golden = load_golden(args.golden)
-    print(f"Evaluating retrieval on {len(golden)} golden questions …\n")
-    r = evaluate(golden)
 
+    if args.mode == "compare":
+        print(f"Comparing retrieval modes on {len(golden)} questions …\n")
+        header = f"  {'mode':8} " + "  ".join(f"R@{k}" for k in KS) + "   MRR"
+        print(header)
+        print("  " + "─" * (len(header) - 2))
+        for mode in ("vector", "hybrid", "rerank"):
+            r = evaluate(golden, mode)
+            cells = "  ".join(f"{r['recall'][k]:.2f}" for k in KS)
+            print(f"  {mode:8} {cells}   {r['mrr']:.2f}")
+        return
+
+    print(f"Evaluating retrieval ({args.mode}) on {len(golden)} golden questions …\n")
+    r = evaluate(golden, args.mode)
     print("  Retrieval results")
     print("  ─────────────────")
     for k in KS:

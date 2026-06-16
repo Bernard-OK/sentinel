@@ -25,7 +25,7 @@ import psycopg
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
-from retrieval.search import search
+from retrieval.hybrid import hybrid_search
 
 load_dotenv()
 
@@ -64,8 +64,8 @@ SYSTEM = (
 
 
 def build_context(query: str, k: int = 5) -> tuple[str, list[str]]:
-    """Retrieve top-k CVEs and format them as grounding context (full descriptions)."""
-    hits = search(query, k)
+    """Retrieve top-k CVEs (hybrid + rerank) and format as grounding context (full descriptions)."""
+    hits = hybrid_search(query, k, rerank=True)
     ids = [h["cve_id"] for h in hits]
     if not ids:
         return "", []

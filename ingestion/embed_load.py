@@ -50,8 +50,10 @@ CREATE TABLE IF NOT EXISTS chunks (
     id         SERIAL PRIMARY KEY,
     cve_id     TEXT NOT NULL REFERENCES cves(cve_id),
     chunk_text TEXT NOT NULL,
-    embedding  vector({EMBED_DIM})
+    embedding  vector({EMBED_DIM}),
+    ts         tsvector GENERATED ALWAYS AS (to_tsvector('english', chunk_text)) STORED
 );
+CREATE INDEX IF NOT EXISTS chunks_ts_gin ON chunks USING GIN (ts);
 """
 
 
