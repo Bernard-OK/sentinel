@@ -11,7 +11,7 @@
 <style>
   :root {
     --page:#F9FAFB; --surface:#FFFFFF; --surface-2:#F3F4F6;
-    --fg:#0A0A0A; --fg-2:#1F2937; --muted:#4B5563; --faint:#6B7280;
+    --fg:#000000; --fg-2:#111827; --muted:#374151; --faint:#4B5563;
     --edge:#E5E7EB; --edge-strong:#D1D5DB;
     --brand:#047857; --brand-strong:#065F46; --brand-soft:#ECFDF5;
     --danger:#B91C1C; --danger-soft:#FEF2F2; --danger-edge:#FECACA;
@@ -40,7 +40,7 @@
   .logo svg { width:21px; height:21px; }
   .brand h1 { font-size:24px; font-weight:800; letter-spacing:-.4px; margin:0; }
   .brand .tag { font-size:12.5px; color:var(--faint); font-weight:500; margin-top:1px; }
-  .lede { color:var(--muted); margin:18px 0 0; font-size:15.5px; max-width:60ch; }
+  .lede { color:var(--fg-2); margin:18px 0 0; font-size:15.5px; max-width:60ch; }
 
   /* Eval stat chips */
   .stats { display:flex; flex-wrap:wrap; gap:8px; margin:20px 0 30px; }
@@ -75,13 +75,13 @@
   @keyframes rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
   .card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
                padding:22px 24px 0; }
-  .summary { font-size:16.5px; line-height:1.6; color:var(--fg-2); margin:0; flex:1; }
+  .summary { font-size:16.5px; line-height:1.6; color:var(--fg); margin:0; flex:1; font-weight:500; }
   .card-body { padding:18px 24px 4px; }
   .row { display:grid; grid-template-columns:120px 1fr; gap:6px 18px; padding:11px 0;
          border-top:1px solid var(--edge); font-size:14px; }
   .row .k { color:var(--faint); font-weight:600; font-size:12.5px; text-transform:uppercase;
             letter-spacing:.4px; padding-top:2px; }
-  .row .v { color:var(--fg-2); }
+  .row .v { color:var(--fg); }
   .badge { display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border-radius:8px;
            font-size:12.5px; font-weight:700; border:1px solid; white-space:nowrap; }
   .sev-Critical,.sev-High { color:var(--danger); background:var(--danger-soft); border-color:var(--danger-edge); }
