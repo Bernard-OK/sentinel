@@ -1,0 +1,7 @@
+# Cloudflare named-tunnel config for Sentinel.
+# Referenced by tunnel NAME (resolved via cert.pem); credentials json is found automatically.
+tunnel: sentinel
+ingress:
+  - hostname: sentinel.okwampah.com
+    service: http://localhost:8900
+  - service: http_status:404
