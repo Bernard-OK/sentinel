@@ -1,0 +1,36 @@
+# One-command local/VPS stack: Postgres+pgvector + the Sentinel API.
+# Deploy:  docker compose up -d --build
+# Seed (one-time, after first up):
+#   docker compose exec app python -m ingestion.fetch --days 120 --limit 3000
+#   docker compose exec app python -m ingestion.embed_load
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: sentinel
+      POSTGRES_DB: sentinel
+    volumes:
+      - sentinel_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://sentinel:sentinel@db:5432/sentinel
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      NVD_API_KEY: ${NVD_API_KEY:-}
+      DEMO_PER_IP_DAILY: ${DEMO_PER_IP_DAILY:-20}
+      DEMO_DAILY_USD_CAP: ${DEMO_DAILY_USD_CAP:-2.0}
+    ports:
+      - "8900:8900"
+
+volumes:
+  sentinel_pgdata:

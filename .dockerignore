@@ -1,0 +1,10 @@
+.venv/
+data/
+__pycache__/
+*.pyc
+.git/
+.env
+.cache/
+.hf_cache/
+eval/reports/
+ui/node_modules/

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sentinel — Grounded CVE Intelligence</title>
+<style>
+  :root {
+    --bg:#0b0f17; --panel:#121826; --line:#1f2937; --fg:#e5e7eb; --muted:#8b97a8;
+    --accent:#34d399; --accent2:#60a5fa; --warn:#f59e0b; --crit:#f87171;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:780px; margin:0 auto; padding:40px 20px 80px; }
+  header h1 { font-size:28px; margin:0 0 4px; letter-spacing:-.3px; }
+  header h1 .dot { color:var(--accent); }
+  header p { color:var(--muted); margin:0 0 8px; }
+  .stats { display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 26px; }
+  .stat { background:var(--panel); border:1px solid var(--line); border-radius:8px;
+          padding:6px 10px; font-size:12px; color:var(--muted); }
+  .stat b { color:var(--fg); }
+  .ask { display:flex; gap:8px; }
+  .ask input { flex:1; background:var(--panel); border:1px solid var(--line); color:var(--fg);
+               border-radius:10px; padding:13px 14px; font-size:15px; outline:none; }
+  .ask input:focus { border-color:var(--accent2); }
+  .ask button { background:var(--accent); color:#06281c; border:0; border-radius:10px;
+                padding:0 20px; font-weight:700; cursor:pointer; font-size:15px; }
+  .ask button:disabled { opacity:.5; cursor:default; }
+  .examples { margin:14px 0 0; display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { background:transparent; border:1px solid var(--line); color:var(--muted);
+          border-radius:999px; padding:6px 12px; font-size:13px; cursor:pointer; }
+  .chip:hover { border-color:var(--accent2); color:var(--fg); }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:14px;
+          padding:22px; margin-top:26px; display:none; }
+  .card.show { display:block; }
+  .summary { font-size:16px; margin:0 0 16px; }
+  .grid { display:grid; grid-template-columns:130px 1fr; gap:8px 16px; font-size:14px; }
+  .grid .k { color:var(--muted); }
+  .pill { display:inline-block; padding:2px 9px; border-radius:6px; font-size:12px; font-weight:600; }
+  .sev-Critical,.sev-High { background:rgba(248,113,113,.15); color:var(--crit); }
+  .sev-Medium { background:rgba(245,158,11,.15); color:var(--warn); }
+  .sev-Low,.sev-unknown,.sev-Unknown { background:rgba(139,151,168,.15); color:var(--muted); }
+  .cite { display:inline-block; font-family:ui-monospace,monospace; font-size:12px;
+          background:rgba(96,165,250,.12); color:var(--accent2); border-radius:6px;
+          padding:2px 7px; margin:2px 4px 2px 0; }
+  .meta { margin-top:16px; padding-top:14px; border-top:1px solid var(--line);
+          color:var(--muted); font-size:12px; display:flex; gap:16px; flex-wrap:wrap; }
+  .refused { color:var(--warn); }
+  .err { color:var(--crit); }
+  footer { color:var(--muted); font-size:12px; margin-top:34px; text-align:center; }
+  footer a { color:var(--accent2); text-decoration:none; }
+  .spin { display:inline-block; width:14px; height:14px; border:2px solid #06281c;
+          border-top-color:transparent; border-radius:50%; animation:s .7s linear infinite;
+          vertical-align:-2px; }
+  @keyframes s { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Sentinel<span class="dot">.</span></h1>
+    <p>Ask about a security vulnerability — answers are grounded in real CVE data, with citations.</p>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="ask">
+    <input id="q" placeholder="e.g. What command injection flaws affect VMware?"
+           autocomplete="off" />
+    <button id="go">Ask</button>
+  </div>
+  <div class="examples" id="examples"></div>
+
+  <div class="card" id="card"></div>
+
+  <footer>
+    Built by Bernard · grounded RAG + eval harness + guardrails ·
+    <a href="#" id="repo">source</a>
+  </footer>
+</div>
+
+<script>
+const EXAMPLES = [
+  "What command injection flaws affect VMware?",
+  "Which authentication bypass vulnerabilities should I worry about?",
+  "Is there a remote code execution flaw in any Cisco product?",
+  "What SQL injection issues affect WordPress plugins?",
+];
+
+const $ = s => document.querySelector(s);
+const card = $("#card"), qIn = $("#q"), go = $("#go");
+
+fetch("/api/stats").then(r=>r.json()).then(s=>{
+  $("#stats").innerHTML = `
+    <span class="stat">corpus <b>${s.corpus}</b></span>
+    <span class="stat">recall@1 <b>${s.retrieval_recall_at_1}</b></span>
+    <span class="stat">faithfulness <b>${s.answer_faithfulness}</b></span>
+    <span class="stat">hallucination <b>${s.hallucination_rate}</b></span>
+    <span class="stat">~$${s.cost_per_query_usd}/query</span>`;
+}).catch(()=>{});
+
+$("#examples").innerHTML = EXAMPLES.map(e=>`<button class="chip">${e}</button>`).join("");
+document.querySelectorAll(".chip").forEach(c =>
+  c.onclick = () => { qIn.value = c.textContent; ask(); });
+
+async function ask() {
+  const question = qIn.value.trim();
+  if (!question) return;
+  go.disabled = true; go.innerHTML = '<span class="spin"></span>';
+  card.className = "card show";
+  card.innerHTML = '<span class="muted">Searching the corpus and grounding an answer…</span>';
+  try {
+    const res = await fetch("/api/ask", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({question})
+    });
+    const d = await res.json();
+    if (d.error) { card.innerHTML = `<div class="err">${d.error}</div>`; return; }
+    if (d.refused) {
+      card.innerHTML = `<div class="refused">⛔ Sentinel declined to answer.</div>
+        <p class="muted" style="margin:10px 0 0">${d.reason}. It only answers from its CVE corpus — that's the guardrail working.</p>`;
+      return;
+    }
+    const cites = (d.citations||[]).map(c=>`<span class="cite">${c}</span>`).join("") || "—";
+    const prods = (d.affected_products||[]).join(", ") || "—";
+    card.innerHTML = `
+      <p class="summary">${d.summary}</p>
+      <div class="grid">
+        <div class="k">Severity</div><div><span class="pill sev-${d.severity}">${d.severity}</span></div>
+        <div class="k">Exploitation</div><div>${d.exploitation_status}</div>
+        <div class="k">Affected</div><div>${prods}</div>
+        <div class="k">Remediation</div><div>${d.remediation}</div>
+        <div class="k">Citations</div><div>${cites}</div>
+      </div>
+      <div class="meta">
+        <span>confidence ${d.confidence}</span>
+        <span>$${d.cost_usd}</span>
+        <span>${d.latency_ms} ms</span>
+      </div>`;
+  } catch(e) {
+    card.innerHTML = `<div class="err">Something went wrong. Try again.</div>`;
+  } finally {
+    go.disabled = false; go.textContent = "Ask";
+  }
+}
+go.onclick = ask;
+qIn.addEventListener("keydown", e => { if (e.key === "Enter") ask(); });
+</script>
+</body>
+</html>
