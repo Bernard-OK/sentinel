@@ -52,6 +52,11 @@ def index():
     return FileResponse(UI_DIR / "index.html")
 
 
+@app.get("/favicon.svg")
+def favicon():
+    return FileResponse(UI_DIR / "favicon.svg", media_type="image/svg+xml")
+
+
 @app.get("/health")
 def health():
     _roll_day()
