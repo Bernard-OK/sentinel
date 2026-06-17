@@ -93,6 +93,8 @@ def main() -> None:
 
     # 3) load into Postgres
     with psycopg.connect(DATABASE_URL) as conn:
+        conn.execute("CREATE EXTENSION IF NOT EXISTS vector")  # idempotent; needed on a fresh DB
+        conn.commit()
         register_vector(conn)
         with conn.cursor() as cur:
             cur.execute(DDL)
