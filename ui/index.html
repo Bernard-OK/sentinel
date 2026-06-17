@@ -48,11 +48,30 @@
   .hero-inner { position:relative; max-width:820px; margin:0 auto; }
   .nav { display:flex; align-items:center; justify-content:space-between; }
   .brand { display:flex; align-items:center; gap:11px; }
-  .logo { width:40px; height:40px; border-radius:11px; flex:none; display:grid; place-items:center;
-    background:linear-gradient(135deg,#10b981,#047857);
-    box-shadow:0 0 0 1px rgba(255,255,255,.12), 0 8px 26px rgba(16,185,129,.45); }
-  .logo svg { width:22px; height:22px; }
+  .logo { position:relative; width:42px; height:42px; border-radius:12px; flex:none; display:grid; place-items:center;
+    background:linear-gradient(135deg,#34d399,#0ea5a4 55%,#6366f1);
+    box-shadow:0 0 0 1px rgba(255,255,255,.14), 0 10px 30px rgba(16,185,129,.5);
+    animation:float 4.5s ease-in-out infinite; }
+  .logo::after { content:""; position:absolute; inset:-5px; border-radius:16px; z-index:-1;
+    background:radial-gradient(circle, rgba(52,211,153,.55), transparent 70%); filter:blur(9px);
+    animation:halo 3.2s ease-in-out infinite; }
+  .logo svg { width:24px; height:24px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.25)); }
+  @keyframes float { 50%{ transform:translateY(-3px); } }
+  @keyframes halo { 0%,100%{ opacity:.45; } 50%{ opacity:.85; } }
+  .word { display:flex; align-items:center; gap:9px; font-size:19px; font-weight:800; letter-spacing:-.3px; color:#fff; }
+  .word .ai { font-size:11px; font-weight:800; letter-spacing:.6px; padding:3px 7px; border-radius:6px;
+    color:#06281c; background:linear-gradient(135deg,#34d399,#22d3ee);
+    box-shadow:0 3px 10px rgba(52,211,153,.4); }
   .brand b { font-size:18px; font-weight:800; letter-spacing:-.3px; }
+
+  /* aurora light */
+  .aurora { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+  .aurora i { position:absolute; border-radius:50%; filter:blur(80px); opacity:.45; }
+  .aurora .a1 { width:420px; height:420px; background:#10b981; top:-160px; left:6%; animation:drift1 15s ease-in-out infinite; }
+  .aurora .a2 { width:360px; height:360px; background:#6366f1; top:-110px; right:4%; animation:drift2 18s ease-in-out infinite; }
+  .aurora .a3 { width:300px; height:300px; background:#22d3ee; top:30px; left:42%; opacity:.3; animation:drift1 20s ease-in-out infinite; }
+  @keyframes drift1 { 50%{ transform:translate(50px,40px) scale(1.12); } }
+  @keyframes drift2 { 50%{ transform:translate(-40px,50px) scale(1.08); } }
   .nav a { color:rgba(255,255,255,.7); font-size:13px; text-decoration:none; font-weight:600; }
   .nav a:hover { color:#fff; }
   .live { display:inline-flex; align-items:center; gap:7px; font-size:12px; color:rgba(255,255,255,.7);
@@ -143,15 +162,17 @@
 </head>
 <body>
   <section class="hero">
+    <div class="aurora"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
     <div class="hero-inner">
       <div class="nav">
         <div class="brand">
           <span class="logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>
+            <svg viewBox="0 0 24 24" fill="#fff">
+              <path d="M12 2.2l1.9 5.6c.27.8.9 1.43 1.7 1.7L21.2 11.4l-5.6 1.9c-.8.27-1.43.9-1.7 1.7L12 20.6l-1.9-5.6c-.27-.8-.9-1.43-1.7-1.7L2.8 11.4l5.6-1.9c.8-.27 1.43-.9 1.7-1.7L12 2.2z"/>
+              <path d="M18.5 14.3l.8 2.3c.13.38.43.68.81.81l2.29.79-2.29.79c-.38.13-.68.43-.81.81l-.79 2.29-.79-2.29a1.2 1.2 0 0 0-.81-.81L15.3 18l2.4-.79c.38-.13.68-.43.81-.81l.79-2.1z" opacity=".9"/>
             </svg>
           </span>
-          <b>Sentinel</b>
+          <span class="word">Sentinel <span class="ai">AI</span></span>
         </div>
         <span class="live"><span class="d"></span> operational</span>
       </div>
