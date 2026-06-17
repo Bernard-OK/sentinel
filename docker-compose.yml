@@ -33,6 +33,9 @@ services:
       DEMO_DAILY_USD_CAP: ${DEMO_DAILY_USD_CAP:-2.0}
     ports:
       - "8900:8900"
+    volumes:
+      # serve the UI from the host folder → UI tweaks need only `git pull` (no rebuild)
+      - ./ui:/app/ui:ro
 
 volumes:
   sentinel_pgdata:

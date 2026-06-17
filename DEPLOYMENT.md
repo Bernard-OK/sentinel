@@ -13,7 +13,7 @@ Sentinel is one Docker app + a Postgres/pgvector service. Pick a host below.
 Needs ~2.5 GB free RAM (PyTorch + models) and a few GB disk.
 
 ```bash
-git clone <your-repo-url> sentinel && cd sentinel
+git clone https://github.com/Bernard-OK/sentinel.git && cd sentinel
 echo "ANTHROPIC_API_KEY=sk-ant-..." > .env
 docker compose up -d --build
 
