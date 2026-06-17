@@ -1,0 +1,22 @@
+# Fly.io config for Sentinel. `fly launch --no-deploy` then `fly deploy`.
+# DATABASE_URL is set by `fly postgres attach`; ANTHROPIC_API_KEY via `fly secrets set`.
+app = "sentinel"
+primary_region = "cdg"  # Paris — close to you; change as needed
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  DEMO_PER_IP_DAILY = "20"
+  DEMO_DAILY_USD_CAP = "2.0"
+
+[http_service]
+  internal_port = 8900
+  force_https = true
+  auto_stop_machines = true     # sleep when idle → near-free
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-2x"        # ~2 GB RAM for PyTorch + models
+  memory = "2gb"

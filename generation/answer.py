@@ -26,6 +26,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from guardrails.guard import confidence_gate, enforce_citations
+from observability.trace import log_trace
 from retrieval.hybrid import hybrid_search
 
 load_dotenv()
@@ -102,6 +103,7 @@ def answer(query: str, k: int = 5) -> dict:
     # Guardrail 1 — confidence gate: refuse out-of-corpus questions instead of improvising.
     passes, score = confidence_gate(query)
     if not passes:
+        log_trace("refused", {"question": query, "confidence": round(score, 3)})
         return {
             "refused": True,
             "reason": f"low retrieval confidence ({score:.2f} < 0.60) — likely outside the CVE corpus",
@@ -135,6 +137,16 @@ def answer(query: str, k: int = 5) -> dict:
     if parsed:
         valid, invalid_cites = enforce_citations(parsed.citations, retrieved_ids)
         parsed.citations = valid
+
+    log_trace(
+        "answer",
+        {
+            "question": query, "retrieved_ids": retrieved_ids,
+            "citations": parsed.citations if parsed else [], "stripped_citations": invalid_cites,
+            "confidence": round(score, 3), "cost_usd": round(cost, 6), "latency_ms": latency_ms,
+            "tokens_in": usage.input_tokens, "tokens_out": usage.output_tokens,
+        },
+    )
 
     return {
         "answer": parsed,
