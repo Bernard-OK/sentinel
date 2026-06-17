@@ -4,70 +4,139 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Sentinel — Grounded CVE Intelligence</title>
+<meta name="description" content="A security assistant that answers from real CVE data, with citations and a validated evaluation harness." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg:#0b0f17; --panel:#121826; --line:#1f2937; --fg:#e5e7eb; --muted:#8b97a8;
-    --accent:#34d399; --accent2:#60a5fa; --warn:#f59e0b; --crit:#f87171;
+    --page:#F9FAFB; --surface:#FFFFFF; --surface-2:#F3F4F6;
+    --fg:#0A0A0A; --fg-2:#1F2937; --muted:#4B5563; --faint:#6B7280;
+    --edge:#E5E7EB; --edge-strong:#D1D5DB;
+    --brand:#047857; --brand-strong:#065F46; --brand-soft:#ECFDF5;
+    --danger:#B91C1C; --danger-soft:#FEF2F2; --danger-edge:#FECACA;
+    --warn:#B45309; --warn-soft:#FFFBEB; --warn-edge:#FDE68A;
+    --info:#1D4ED8; --info-soft:#EFF6FF; --info-edge:#BFDBFE;
+    --shadow:0 1px 2px rgba(0,0,0,.04); --shadow-lg:0 8px 30px rgba(15,23,42,.08);
+    --radius:14px;
   }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--fg);
-         font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
-  .wrap { max-width:780px; margin:0 auto; padding:40px 20px 80px; }
-  header h1 { font-size:28px; margin:0 0 4px; letter-spacing:-.3px; }
-  header h1 .dot { color:var(--accent); }
-  header p { color:var(--muted); margin:0 0 8px; }
-  .stats { display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 26px; }
-  .stat { background:var(--panel); border:1px solid var(--line); border-radius:8px;
-          padding:6px 10px; font-size:12px; color:var(--muted); }
-  .stat b { color:var(--fg); }
-  .ask { display:flex; gap:8px; }
-  .ask input { flex:1; background:var(--panel); border:1px solid var(--line); color:var(--fg);
-               border-radius:10px; padding:13px 14px; font-size:15px; outline:none; }
-  .ask input:focus { border-color:var(--accent2); }
-  .ask button { background:var(--accent); color:#06281c; border:0; border-radius:10px;
-                padding:0 20px; font-weight:700; cursor:pointer; font-size:15px; }
-  .ask button:disabled { opacity:.5; cursor:default; }
-  .examples { margin:14px 0 0; display:flex; flex-wrap:wrap; gap:8px; }
-  .chip { background:transparent; border:1px solid var(--line); color:var(--muted);
-          border-radius:999px; padding:6px 12px; font-size:13px; cursor:pointer; }
-  .chip:hover { border-color:var(--accent2); color:var(--fg); }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:14px;
-          padding:22px; margin-top:26px; display:none; }
-  .card.show { display:block; }
-  .summary { font-size:16px; margin:0 0 16px; }
-  .grid { display:grid; grid-template-columns:130px 1fr; gap:8px 16px; font-size:14px; }
-  .grid .k { color:var(--muted); }
-  .pill { display:inline-block; padding:2px 9px; border-radius:6px; font-size:12px; font-weight:600; }
-  .sev-Critical,.sev-High { background:rgba(248,113,113,.15); color:var(--crit); }
-  .sev-Medium { background:rgba(245,158,11,.15); color:var(--warn); }
-  .sev-Low,.sev-unknown,.sev-Unknown { background:rgba(139,151,168,.15); color:var(--muted); }
-  .cite { display:inline-block; font-family:ui-monospace,monospace; font-size:12px;
-          background:rgba(96,165,250,.12); color:var(--accent2); border-radius:6px;
-          padding:2px 7px; margin:2px 4px 2px 0; }
-  .meta { margin-top:16px; padding-top:14px; border-top:1px solid var(--line);
-          color:var(--muted); font-size:12px; display:flex; gap:16px; flex-wrap:wrap; }
-  .refused { color:var(--warn); }
-  .err { color:var(--crit); }
-  footer { color:var(--muted); font-size:12px; margin-top:34px; text-align:center; }
-  footer a { color:var(--accent2); text-decoration:none; }
-  .spin { display:inline-block; width:14px; height:14px; border:2px solid #06281c;
-          border-top-color:transparent; border-radius:50%; animation:s .7s linear infinite;
-          vertical-align:-2px; }
-  @keyframes s { to { transform:rotate(360deg); } }
+  html,body { margin:0; }
+  body {
+    background:
+      radial-gradient(1200px 500px at 50% -200px, #ECFDF5 0%, transparent 60%),
+      var(--page);
+    color:var(--fg);
+    font-family:Inter,system-ui,-apple-system,sans-serif;
+    font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:760px; margin:0 auto; padding:56px 20px 90px; }
+
+  /* Header */
+  .brand { display:flex; align-items:center; gap:11px; }
+  .logo { width:38px; height:38px; border-radius:10px; flex:none;
+          background:linear-gradient(135deg,var(--brand),var(--brand-strong));
+          display:grid; place-items:center; box-shadow:0 4px 14px rgba(4,120,87,.3); }
+  .logo svg { width:21px; height:21px; }
+  .brand h1 { font-size:24px; font-weight:800; letter-spacing:-.4px; margin:0; }
+  .brand .tag { font-size:12.5px; color:var(--faint); font-weight:500; margin-top:1px; }
+  .lede { color:var(--muted); margin:18px 0 0; font-size:15.5px; max-width:60ch; }
+
+  /* Eval stat chips */
+  .stats { display:flex; flex-wrap:wrap; gap:8px; margin:20px 0 30px; }
+  .stat { background:var(--surface); border:1px solid var(--edge); border-radius:9px;
+          padding:7px 12px; font-size:12px; color:var(--faint); box-shadow:var(--shadow);
+          display:flex; align-items:center; gap:6px; }
+  .stat b { color:var(--fg); font-weight:700; font-size:13px; }
+  .stat .ok { width:6px; height:6px; border-radius:50%; background:var(--brand); }
+
+  /* Ask box */
+  .ask { display:flex; gap:10px; background:var(--surface); padding:8px;
+         border:1px solid var(--edge-strong); border-radius:var(--radius); box-shadow:var(--shadow-lg); }
+  .ask input { flex:1; border:0; background:transparent; color:var(--fg);
+               padding:11px 12px; font-size:15.5px; outline:none; font-family:inherit; }
+  .ask input::placeholder { color:#9CA3AF; }
+  .ask button { background:var(--brand); color:#fff; border:0; border-radius:10px;
+                padding:0 22px; font-weight:700; font-size:14.5px; cursor:pointer;
+                transition:background .15s; min-width:96px; }
+  .ask button:hover { background:var(--brand-strong); }
+  .ask button:disabled { opacity:.55; cursor:default; }
+
+  .examples { margin:16px 0 0; display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { background:var(--surface); border:1px solid var(--edge); color:var(--muted);
+          border-radius:999px; padding:7px 13px; font-size:13px; cursor:pointer;
+          transition:all .15s; box-shadow:var(--shadow); }
+  .chip:hover { border-color:var(--brand); color:var(--brand-strong); background:var(--brand-soft); }
+
+  /* Answer card */
+  .card { background:var(--surface); border:1px solid var(--edge); border-radius:var(--radius);
+          box-shadow:var(--shadow-lg); margin-top:28px; overflow:hidden; display:none; }
+  .card.show { display:block; animation:rise .25s ease; }
+  @keyframes rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+  .card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
+               padding:22px 24px 0; }
+  .summary { font-size:16.5px; line-height:1.6; color:var(--fg-2); margin:0; flex:1; }
+  .card-body { padding:18px 24px 4px; }
+  .row { display:grid; grid-template-columns:120px 1fr; gap:6px 18px; padding:11px 0;
+         border-top:1px solid var(--edge); font-size:14px; }
+  .row .k { color:var(--faint); font-weight:600; font-size:12.5px; text-transform:uppercase;
+            letter-spacing:.4px; padding-top:2px; }
+  .row .v { color:var(--fg-2); }
+  .badge { display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border-radius:8px;
+           font-size:12.5px; font-weight:700; border:1px solid; white-space:nowrap; }
+  .sev-Critical,.sev-High { color:var(--danger); background:var(--danger-soft); border-color:var(--danger-edge); }
+  .sev-Medium { color:var(--warn); background:var(--warn-soft); border-color:var(--warn-edge); }
+  .sev-Low,.sev-Unknown,.sev-unknown { color:var(--faint); background:var(--surface-2); border-color:var(--edge); }
+  .exploit-active { color:var(--danger); font-weight:700; }
+  .cite { display:inline-block; font-family:'JetBrains Mono',ui-monospace,monospace; font-size:12px;
+          background:var(--info-soft); color:var(--info); border:1px solid var(--info-edge);
+          border-radius:7px; padding:3px 8px; margin:0 6px 6px 0; }
+  .meta { display:flex; gap:18px; flex-wrap:wrap; padding:14px 24px 20px; margin-top:6px;
+          border-top:1px solid var(--edge); color:var(--faint); font-size:12px; }
+  .meta b { color:var(--muted); font-weight:600; }
+
+  /* States */
+  .state { padding:26px 24px; }
+  .loading { display:flex; align-items:center; gap:12px; color:var(--muted); font-size:14.5px; }
+  .skeleton { height:12px; border-radius:6px; background:linear-gradient(90deg,#eef1f4,#f6f8fa,#eef1f4);
+              background-size:200% 100%; animation:sh 1.2s infinite; }
+  @keyframes sh { to { background-position:-200% 0; } }
+  .refused { display:flex; gap:14px; padding:24px; }
+  .refused .ic { width:36px; height:36px; border-radius:9px; flex:none; display:grid; place-items:center;
+                 background:var(--warn-soft); border:1px solid var(--warn-edge); color:var(--warn); font-size:18px; }
+  .refused .t { font-weight:700; color:var(--fg); }
+  .refused .d { color:var(--muted); font-size:13.5px; margin-top:3px; }
+  .err { padding:22px 24px; color:var(--danger); }
+
+  footer { margin-top:40px; text-align:center; color:var(--faint); font-size:12.5px; }
+  footer a { color:var(--brand-strong); font-weight:600; text-decoration:none; }
+  .spin { width:16px; height:16px; border:2.5px solid #d6e9e1; border-top-color:var(--brand);
+          border-radius:50%; animation:r .7s linear infinite; flex:none; }
+  @keyframes r { to { transform:rotate(360deg); } }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>Sentinel<span class="dot">.</span></h1>
-    <p>Ask about a security vulnerability — answers are grounded in real CVE data, with citations.</p>
-  </header>
+  <div class="brand">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="m9 12 2 2 4-4"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Sentinel</h1>
+      <div class="tag">Grounded CVE intelligence</div>
+    </div>
+  </div>
+  <p class="lede">Ask about a security vulnerability. Every answer is grounded in real CVE data
+    (NVD · CISA KEV · EPSS), returned with citations — and refused when the question falls outside
+    the corpus.</p>
 
   <div class="stats" id="stats"></div>
 
   <div class="ask">
-    <input id="q" placeholder="e.g. What command injection flaws affect VMware?"
-           autocomplete="off" />
+    <input id="q" placeholder="e.g. What command injection flaws affect VMware?" autocomplete="off" />
     <button id="go">Ask</button>
   </div>
   <div class="examples" id="examples"></div>
@@ -75,8 +144,8 @@
   <div class="card" id="card"></div>
 
   <footer>
-    Built by Bernard · grounded RAG + eval harness + guardrails ·
-    <a href="#" id="repo">source</a>
+    Built by <b>Bernard Okwampah</b> · hybrid retrieval + validated eval harness + guardrails ·
+    <a href="#" id="repo">view source</a>
   </footer>
 </div>
 
@@ -87,62 +156,69 @@ const EXAMPLES = [
   "Is there a remote code execution flaw in any Cisco product?",
   "What SQL injection issues affect WordPress plugins?",
 ];
-
 const $ = s => document.querySelector(s);
 const card = $("#card"), qIn = $("#q"), go = $("#go");
 
 fetch("/api/stats").then(r=>r.json()).then(s=>{
-  $("#stats").innerHTML = `
-    <span class="stat">corpus <b>${s.corpus}</b></span>
-    <span class="stat">recall@1 <b>${s.retrieval_recall_at_1}</b></span>
-    <span class="stat">faithfulness <b>${s.answer_faithfulness}</b></span>
-    <span class="stat">hallucination <b>${s.hallucination_rate}</b></span>
-    <span class="stat">~$${s.cost_per_query_usd}/query</span>`;
+  $("#stats").innerHTML = [
+    [`recall@1`, s.retrieval_recall_at_1],
+    [`faithfulness`, s.answer_faithfulness.toFixed(2)],
+    [`hallucination`, s.hallucination_rate.toFixed(2)],
+    [`judge caught`, (s.judge_detection_rate*100)+'%'],
+    [`~$${s.cost_per_query_usd}/query`, null],
+  ].map(([k,v]) => `<span class="stat"><span class="ok"></span>${v!==null?`${k} <b>${v}</b>`:k}</span>`).join("");
 }).catch(()=>{});
 
 $("#examples").innerHTML = EXAMPLES.map(e=>`<button class="chip">${e}</button>`).join("");
-document.querySelectorAll(".chip").forEach(c =>
-  c.onclick = () => { qIn.value = c.textContent; ask(); });
+document.querySelectorAll(".chip").forEach(c => c.onclick = () => { qIn.value = c.textContent; ask(); });
+
+const esc = s => (s||"").replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
 
 async function ask() {
   const question = qIn.value.trim();
   if (!question) return;
-  go.disabled = true; go.innerHTML = '<span class="spin"></span>';
+  go.disabled = true; go.innerHTML = '<span class="spin" style="margin:0 auto"></span>';
   card.className = "card show";
-  card.innerHTML = '<span class="muted">Searching the corpus and grounding an answer…</span>';
+  card.innerHTML = `<div class="state"><div class="loading"><span class="spin"></span>
+      Searching the corpus and grounding an answer…</div>
+      <div style="margin-top:18px"><div class="skeleton" style="width:90%"></div>
+      <div class="skeleton" style="width:70%;margin-top:9px"></div>
+      <div class="skeleton" style="width:80%;margin-top:9px"></div></div></div>`;
   try {
     const res = await fetch("/api/ask", {
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({question})
+      method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({question})
     });
     const d = await res.json();
-    if (d.error) { card.innerHTML = `<div class="err">${d.error}</div>`; return; }
+    if (d.error) { card.innerHTML = `<div class="err">${esc(d.error)}</div>`; return; }
     if (d.refused) {
-      card.innerHTML = `<div class="refused">⛔ Sentinel declined to answer.</div>
-        <p class="muted" style="margin:10px 0 0">${d.reason}. It only answers from its CVE corpus — that's the guardrail working.</p>`;
+      card.innerHTML = `<div class="refused"><div class="ic">⛔</div><div>
+        <div class="t">Outside the corpus — declined</div>
+        <div class="d">${esc(d.reason)}. Sentinel only answers from its CVE data; refusing beats guessing.</div>
+      </div></div>`;
       return;
     }
-    const cites = (d.citations||[]).map(c=>`<span class="cite">${c}</span>`).join("") || "—";
-    const prods = (d.affected_products||[]).join(", ") || "—";
+    const cites = (d.citations||[]).map(c=>`<span class="cite">${esc(c)}</span>`).join("") || "—";
+    const prods = esc((d.affected_products||[]).join(", ")) || "—";
+    const active = /active/i.test(d.exploitation_status);
     card.innerHTML = `
-      <p class="summary">${d.summary}</p>
-      <div class="grid">
-        <div class="k">Severity</div><div><span class="pill sev-${d.severity}">${d.severity}</span></div>
-        <div class="k">Exploitation</div><div>${d.exploitation_status}</div>
-        <div class="k">Affected</div><div>${prods}</div>
-        <div class="k">Remediation</div><div>${d.remediation}</div>
-        <div class="k">Citations</div><div>${cites}</div>
+      <div class="card-head">
+        <p class="summary">${esc(d.summary)}</p>
+        <span class="badge sev-${esc(d.severity)}">${esc(d.severity)}</span>
+      </div>
+      <div class="card-body">
+        <div class="row"><div class="k">Exploitation</div><div class="v ${active?'exploit-active':''}">${esc(d.exploitation_status)}</div></div>
+        <div class="row"><div class="k">Affected</div><div class="v">${prods}</div></div>
+        <div class="row"><div class="k">Remediation</div><div class="v">${esc(d.remediation)}</div></div>
+        <div class="row"><div class="k">Citations</div><div class="v">${cites}</div></div>
       </div>
       <div class="meta">
-        <span>confidence ${d.confidence}</span>
-        <span>$${d.cost_usd}</span>
-        <span>${d.latency_ms} ms</span>
+        <span>retrieval confidence <b>${d.confidence}</b></span>
+        <span>cost <b>$${d.cost_usd}</b></span>
+        <span>latency <b>${d.latency_ms} ms</b></span>
       </div>`;
   } catch(e) {
-    card.innerHTML = `<div class="err">Something went wrong. Try again.</div>`;
-  } finally {
-    go.disabled = false; go.textContent = "Ask";
-  }
+    card.innerHTML = `<div class="err">Something went wrong. Please try again.</div>`;
+  } finally { go.disabled = false; go.textContent = "Ask"; }
 }
 go.onclick = ask;
 qIn.addEventListener("keydown", e => { if (e.key === "Enter") ask(); });
